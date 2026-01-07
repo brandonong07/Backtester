@@ -4,42 +4,58 @@ from datetime import datetime
 import yfinance as yf
 import matplotlib.pyplot as plt
 
+class Backtester:
+    short = None
+    long = None
 
-# Download data for SPY, QQQ, and AAPL
-ETFs = yf.Tickers("SPY QQQ AAPL")
-dfSPY = ETFs.tickers['SPY'].history(period="1y")[['Open', 'High', 'Low', 'Close', 'Volume']]
-# dfQQQ = ETFs.tickers['QQQ'].history(period="1y")[['Open', 'High', 'Low', 'Close', 'Volume']]
-# dfAAPL = ETFs.tickers['AAPL'].history(period="1y")[['Open', 'High', 'Low', 'Close', 'Volume']]
+    
+    def __init__(self, ticker, start_date, end_date):
+        self.ticker = ticker
+        self.data = self.load_data(ticker,start_date, end_date)
+    
+    def load_data(self, ticker, start, end):
+        data = yf.download(ticker, start=start, end=end)
+        return data
+    
+    def moving_average(self, short_length, long_length):
+        self.short = short_length
+        self.long = long_length
 
-# 20 & 50 day Moving Average SPY
-dfSPY['MA20'] = dfSPY['Close'].rolling(window=20, min_periods=1).mean()
-dfSPY['MA50'] = dfSPY['Close'].rolling(window=50, min_periods=1).mean()
+        self.data['MA_short'] = self.data['Close'].rolling(window=self.short, min_periods=1).mean()
+        self.data['MA_long'] = self.data['Close'].rolling(window=self.long, min_periods=1).mean()
 
-# Trading Signals
-dfSPY['Signal'] = 0.0
-dfSPY["Signal"][20:] = np.where(dfSPY['MA20'][20:] > dfSPY['MA50'][20:], 1.0, 0.0)
+    def calculate_metrics(self):   
+        
+        pass
 
-# Trading Orders
-dfSPY["Position"] = dfSPY["Signal"].diff()
+    def plot_results(self):
+        self.data['Signal'] = 0.0
+        self.data['Signal'][self.short:] = np.where(self.data['MA_short'][self.short:] 
+                                                    > self.data['MA_long'][self.short:], 1.0, 0.0)
+        self.data['Position'] = self.data['Signal'].diff()
+        
+        plt.figure(figsize=(14, 7))
+        plt.plot(self.data['Close'], label="Close Price")
+        plt.plot(self.data['MA_short'], label="Short-Term MA")
+        plt.plot(self.data['MA_long'], label="Long-Term MA")
 
-# Plotting Results
-plt.figure(figsize=(14, 7))
-plt.plot(dfSPY['Close'], label="Close Price")
-plt.plot(dfSPY['MA20'], label="20-Day MA")
-plt.plot(dfSPY['MA50'], label="50-Day MA")
-plt.legend()
+        # Buy Signals and Sell Signals
+        plt.plot(self.data[self.data['Position'] == 1].index, 
+                 self.data['MA_short'][self.data['Position'] == 1], 
+                 '^', markersize=10, color='g', label='buy')
+        
+        plt.plot(self.data[self.data['Position'] == -1].index, 
+                 self.data['MA_short'][self.data['Position'] == -1],
+                    'v', markersize=10, color='r', label='sell')
+        
+        # Whole Graph
+        plt.title(f'{self.ticker} Moving Average Crossover Strategy')
+        plt.legend(loc='best')
+        plt.show()
 
-# Buy Signals
-plt.plot(dfSPY[dfSPY['Position'] == 1].index, 
-         dfSPY['MA20'][dfSPY['Position'] == 1], 
-         '^', markersize=10, color='g', label='Buy Signal')
 
-# Sell Signals
-plt.plot(dfSPY[dfSPY['Position'] == -1].index, 
-         dfSPY['MA20'][dfSPY['Position'] == -1],
-         'v', markersize=10, color='r', label='Sell Signal')
-
-# Whole Graph
-plt.title(f'SPY Moving Average Crossover Strategy')
-plt.legend(loc='best')
-plt.show()
+# Usage
+bt = Backtester('SPY', '2023-01-01', '2024-01-01')
+bt.moving_average(short_length=20, long_length=50)
+bt.plot_results()
+bt.portfolio_results()
