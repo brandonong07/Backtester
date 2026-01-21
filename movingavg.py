@@ -6,4 +6,6 @@ import matplotlib.pyplot as plt
 import backtrader as bt
 
 class Backtester:
-    
+    def __init__(self, data):
+        self.data = data
+        
