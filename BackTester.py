@@ -9,7 +9,7 @@ import sys
 import matplotlib.pyplot as plt
 import backtrader as bt
 
-                        
+# Backtester Class
 class Backtester:
     def __init__(self, data):
         self.data = data
@@ -36,7 +36,8 @@ class Backtester:
         # Ending Value:
         print(f"End Portfolio Value: {cerebro.broker.getvalue():.2f}")
         print("Backtesting completed successfully.")
-        
+
+# Strategy Class
 class TestStrategy(bt.Strategy):
 
     def log(self, txt, dt=None):
@@ -89,6 +90,8 @@ class TestStrategy(bt.Strategy):
             if self.stochastic.percK[0] > 80 and self.stochastic.percD[0] > 80: # Overbought condition
                 self.log('SELL SIGNAL DETECTED, %.2f' % self.dataclose[0])
                 self.sell()
+
+# Main Function
 def main():
     data = yf.download('AAPL', start='2020-01-01', end='2021-01-01')
     
