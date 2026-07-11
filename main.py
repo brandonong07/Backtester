@@ -1,6 +1,7 @@
 # Libraries
 import yfinance as yf
 import pandas as pd
+import matplotlib.pyplot as mpl
 
 # 1. Data Download and Cleaning
 def get_OHLCV(ticker="SPY", start_date="2020-01-01", end_date="2026-07-09"):
@@ -38,8 +39,7 @@ def calculate_indicators(df):
     return df
 
 # 3. Portfolio Simulation & Benchmarking
-def simulate_portfolio(df, initial_capital=100000):
-    commission = 0.001  # 0.1% commission per trade
+def simulate_portfolio(df, initial_capital=100000, commission = 0.001):
     in_pos = False
     shares = 0
     cash = initial_capital
@@ -73,14 +73,39 @@ def simulate_portfolio(df, initial_capital=100000):
     print(f"Final Portfolio Value: ${final_value:.2f}")
     print(f"Total Trades: {trade_count}")
     return df
-    
+
+def buy_and_hold(df, initial_capital=100000, commission = 0.001):
+    shares = initial_capital // (df.iloc[0]["Close"] * (1 + commission))
+    cash = initial_capital - (shares * df.iloc[0]["Close"] * (1 + commission))
+    df["Buy and Hold Value"] = shares * df["Close"] + cash
+    return df
+
+'''
+1. Total return
+2. CAGR
+3. Volatility
+4. Sharpe ratio
+5. Max drawdown
+'''
+
 def main():
     df = get_OHLCV()
 
     df = calculate_indicators(df)
     
     df = simulate_portfolio(df)
-    print(df[["Close", "Signal", "Portfolio Value"]].tail())
+    df = buy_and_hold(df)
+    
+    
+    # Comparison between Buy & Hold vs. Moving Average Strategy
+    mpl.plot(df.index, df["Portfolio Value"], label="Moving Average Strategy")
+    mpl.plot(df.index, df["Buy and Hold Value"], label="Buy and Hold Strategy")
+    mpl.title("Portfolio Value Comparison")
+    mpl.xlabel("Date")
+    mpl.ylabel("Portfolio Value ($)")
+    mpl.legend()
+    mpl.show()
 
+    
 if __name__ == "__main__":
     main()
