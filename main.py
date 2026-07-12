@@ -80,6 +80,10 @@ def buy_and_hold(df, initial_capital=100000, commission = 0.001):
     df["Buy and Hold Value"] = shares * df["Close"] + cash
     return df
 
+def metrics(df):
+    pass
+    # CAGR
+    
 '''
 1. Total return
 2. CAGR
